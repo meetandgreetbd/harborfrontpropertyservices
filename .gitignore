@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/lib/generated/prisma
+
+
+# walkthrough screenshots
+/screenshots
+/.playwright-mcp
+
+# all markdown docs (plans, README, notes)
+*.md

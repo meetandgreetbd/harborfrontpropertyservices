@@ -1,0 +1,12 @@
+-- AlterTable
+ALTER TABLE `user` ADD COLUMN `isActive` BOOLEAN NOT NULL DEFAULT true,
+    ADD COLUMN `role` VARCHAR(191) NOT NULL DEFAULT 'admin',
+    ADD COLUMN `staffId` VARCHAR(191) NULL,
+    ADD COLUMN `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3);
+
+-- CreateIndex
+CREATE UNIQUE INDEX `User_staffId_key` ON `User`(`staffId`);
+
+-- AddForeignKey
+ALTER TABLE `User` ADD CONSTRAINT `User_staffId_fkey` FOREIGN KEY (`staffId`) REFERENCES `Staff`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+

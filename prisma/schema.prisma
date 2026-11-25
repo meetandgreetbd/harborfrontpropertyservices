@@ -1,0 +1,304 @@
+// Harborfront database schema.
+// Local development uses MySQL (Laragon) via DATABASE_URL in .env.
+// Production: point DATABASE_URL at the hosting MySQL database.
+// Design notes: doc/DATABASE-PLAN.md
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ───────────────────────── Admin ─────────────────────────
+
+/// People who can log in to /admin. Role decides what they can see and do (lib/auth/roles.ts).
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         String    @default("admin") // admin | manager | staff
+  isActive     Boolean   @default(true)
+  staffId      String?   @unique // a "staff" login is linked to a crew member and only sees their jobs
+  staff        Staff?    @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now()) @updatedAt
+  lastLoginAt  DateTime?
+}
+
+// ───────────────────────── Leads ─────────────────────────
+
+/// Every service request: quote requests and work orders from the website, plus ones added in admin (phone, email).
+model Lead {
+  id           String    @id @default(cuid())
+  kind         String // "estimate" | "work-order"
+  status       String    @default("new") // see lib/leads.ts: new | contacted | quoted | scheduled | in_progress | completed | cancelled
+  priority     String    @default("normal") // low | normal | high | urgent
+  source       String    @default("website") // website | phone | email | walk-in | other
+  assignedToId String?
+  assignedTo   Staff?    @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  scheduledFor DateTime?
+  scheduledEnd DateTime? // bookings: end of the visit (start + duration)
+  bookingRef   String?   @unique // bookings: customer-facing reference, e.g. HF-7K2Q9
+  serviceId    String?
+  serviceRef   Service?  @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  optionName   String    @default("")
+  name         String
+  email        String
+  phone        String
+  address      String
+  service      String    @default("")
+  propertyType String    @default("")
+  company      String    @default("")
+  reference    String    @default("") // loan / property / PO number
+  dueDate      String    @default("")
+  access       String    @default("") // lockbox / gate code / tenant contact
+  message      String    @db.Text
+  notes        String?   @db.Text // internal notes, admin only
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  activities LeadActivity[]
+  slots      BookingSlot[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([assignedToId, status])
+  @@index([scheduledFor])
+}
+
+/// History of everything that happened to a request (status changes, assignment, notes…).
+model LeadActivity {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type      String // created | status | assigned | scheduled | priority | note | edited
+  message   String   @db.Text
+  byName    String   @default("System") // admin name, or "Website" for form submissions
+  createdAt DateTime @default(now())
+
+  @@index([leadId, createdAt])
+}
+
+// ───────────────────────── Staff ─────────────────────────
+
+/// Crew members requests can be assigned to.
+model Staff {
+  id        String   @id @default(cuid())
+  name      String
+  role      String   @default("") // e.g. "Lead technician"
+  phone     String   @default("")
+  email     String   @default("")
+  color     String   @default("#56664b") // calendar / badge colour
+  isActive  Boolean  @default(true)
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leads Lead[]
+  user  User?
+
+  @@index([isActive])
+}
+
+// ───────────────────────── SEO ─────────────────────────
+
+/// Meta title/description and index switch for the fixed pages (home, about, contact…).
+/// Services and service areas carry their own SEO fields.
+model PageSeo {
+  path        String   @id @db.VarChar(200) // e.g. "/about"
+  title       String   @default("") @db.VarChar(120)
+  description String   @default("") @db.VarChar(200)
+  noIndex     Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+}
+
+// ───────────────────────── Services ─────────────────────────
+
+/// How a customer can book this service (doc/DATABASE-PLAN.md §4).
+enum BookingMode {
+  INSTANT // picks a real time slot, confirmed immediately
+  REQUEST // picks a time slot, admin confirms
+  APPOINTMENT // books an assessment visit
+  QUOTE // no calendar — quote form only
+}
+
+enum PriceType {
+  FIXED
+  STARTING_AT
+  HOURLY
+  QUOTE
+}
+
+model ServiceCategory {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  sortOrder Int       @default(0)
+  services  Service[]
+}
+
+/// A service page on the public site, fully editable in /admin/services.
+model Service {
+  id               String          @id @default(cuid())
+  slug             String          @unique
+  name             String
+  categoryId       String
+  category         ServiceCategory @relation(fields: [categoryId], references: [id])
+  shortDescription String          @db.VarChar(300)
+  icon             String          @default("wrench") // card icon key, see lib/service-icons.tsx
+  intro            String          @db.Text // paragraphs separated by blank lines
+  included         Json // string[]
+  goodFor          Json // string[]
+
+  bookingMode     BookingMode @default(QUOTE)
+  priceType       PriceType   @default(QUOTE)
+  basePrice       Decimal?    @db.Decimal(10, 2)
+  priceNote       String      @default("") @db.VarChar(300)
+  durationMin     Int         @default(60)
+  bufferMin       Int         @default(30)
+  minNoticeHours  Int         @default(24)
+  maxAdvanceDays  Int         @default(30)
+  slotIntervalMin Int         @default(30)
+  requiresStaff   Boolean     @default(true)
+
+  metaTitle       String   @default("") @db.VarChar(120)
+  metaDescription String   @default("") @db.VarChar(200)
+  noIndex         Boolean  @default(false)
+  isPublished     Boolean  @default(false)
+  isFeatured      Boolean  @default(false)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  options   ServiceOption[]
+  faqs      ServiceFaq[]
+  images    ServiceImage[]
+  related   ServiceRelation[]    @relation("from")
+  relatedTo ServiceRelation[]    @relation("to")
+  areas     ServiceAreaService[]
+  bookings  Lead[]
+
+  @@index([isPublished, sortOrder])
+  @@index([categoryId])
+}
+
+/// Packages / variants of a service, e.g. "1 hour", "Half day", "2 doors".
+model ServiceOption {
+  id          String   @id @default(cuid())
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  name        String
+  description String   @default("") @db.VarChar(300)
+  price       Decimal? @db.Decimal(10, 2)
+  durationMin Int?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+
+  @@index([serviceId])
+}
+
+model ServiceFaq {
+  id        String  @id @default(cuid())
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  question  String  @db.VarChar(300)
+  answer    String  @db.Text
+  sortOrder Int     @default(0)
+
+  @@index([serviceId])
+}
+
+model ServiceImage {
+  id        String  @id @default(cuid())
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  url       String  @db.VarChar(500)
+  alt       String  @db.VarChar(200)
+  caption   String  @default("") @db.VarChar(200)
+  isCover   Boolean @default(false)
+  sortOrder Int     @default(0)
+
+  @@index([serviceId])
+}
+
+/// "Often booked together" links between services.
+model ServiceRelation {
+  serviceId String
+  relatedId String
+  service   Service @relation("from", fields: [serviceId], references: [id], onDelete: Cascade)
+  related   Service @relation("to", fields: [relatedId], references: [id], onDelete: Cascade)
+
+  @@id([serviceId, relatedId])
+}
+
+// ───────────────────────── Service areas ─────────────────────────
+
+/// A city page: /service-areas/{slug}. Drafts are noindex and left out of the sitemap.
+model ServiceArea {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  city            String
+  region          String   @db.VarChar(10)
+  intro           String   @db.Text
+  neighborhoods   Json // string[]
+  zipCodes        Json // string[]
+  localNotes      Json // string[]
+  metaTitle       String   @default("") @db.VarChar(120)
+  metaDescription String   @default("") @db.VarChar(200)
+  noIndex         Boolean  @default(false)
+  isPublished     Boolean  @default(false)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  services ServiceAreaService[]
+
+  @@index([isPublished, sortOrder])
+}
+
+/// Which services are offered (and featured) in which city.
+model ServiceAreaService {
+  areaId    String
+  serviceId String
+  area      ServiceArea @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  service   Service     @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  sortOrder Int         @default(0)
+
+  @@id([areaId, serviceId])
+}
+
+// ───────────────────────── Booking ─────────────────────────
+
+/// Opening hours per weekday (0 = Sunday … 6 = Saturday), used to offer booking time slots.
+model WorkingHours {
+  weekday   Int     @id
+  isOpen    Boolean @default(true)
+  startTime String  @default("08:00") @db.VarChar(5)
+  endTime   String  @default("17:00") @db.VarChar(5)
+}
+
+/// Holidays, days off or any period with no bookings.
+model BlockedTime {
+  id        String   @id @default(cuid())
+  startsAt  DateTime
+  endsAt    DateTime
+  reason    String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([startsAt, endsAt])
+}
+
+/// One row per 15-minute block a booking occupies (visit + buffer).
+/// The UNIQUE index on slotStart makes the database reject double bookings.
+model BookingSlot {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  slotStart DateTime @unique
+
+  @@index([leadId])
+}

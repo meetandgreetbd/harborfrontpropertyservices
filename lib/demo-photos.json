@@ -1,0 +1,184 @@
+{
+  "hero": {
+    "src": "/demo/hero.jpg",
+    "alt": "Technician adjusting a door hinge in a bright apartment",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "about-owner": {
+    "src": "/demo/about-owner.jpg",
+    "alt": "Owner of the property maintenance company outside a house",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "about-crew": {
+    "src": "/demo/about-crew.jpg",
+    "alt": "Maintenance crew walking to a rental house with tools",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "about-van": {
+    "src": "/demo/about-van.jpg",
+    "alt": "Work van with organized tools and supplies",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "about-job": {
+    "src": "/demo/about-job.jpg",
+    "alt": "Installing a new front door handle and deadbolt",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "proof-before": {
+    "src": "/demo/proof-before.jpg",
+    "alt": "Damaged drywall before repair",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "proof-after": {
+    "src": "/demo/proof-after.jpg",
+    "alt": "Wall after patching and painting",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "proof-lockbox": {
+    "src": "/demo/proof-lockbox.jpg",
+    "alt": "Lockbox installed on a front door",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "areas-map": {
+    "src": "/demo/areas-map.jpg",
+    "alt": "Aerial view of a suburban neighborhood",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "cta": {
+    "src": "/demo/cta.jpg",
+    "alt": "Modern house exterior at dusk",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "service-property-maintenance": {
+    "src": "/demo/service-property-maintenance.jpg",
+    "alt": "Technician fixing a kitchen faucet",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "service-handyman": {
+    "src": "/demo/service-handyman.jpg",
+    "alt": "Handyman mounting a shelf with a drill",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "service-light-construction": {
+    "src": "/demo/service-light-construction.jpg",
+    "alt": "Carpenter installing laminate flooring",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "service-electrical-repairs": {
+    "src": "/demo/service-electrical-repairs.jpg",
+    "alt": "Replacing a ceiling light fixture",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "service-locks-rekey-lockbox": {
+    "src": "/demo/service-locks-rekey-lockbox.jpg",
+    "alt": "Rekeying a front door lock",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "service-landscaping-lawn-care": {
+    "src": "/demo/service-landscaping-lawn-care.jpg",
+    "alt": "Mowing a lawn in front of a rental house",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "service-snow-removal-ice-control": {
+    "src": "/demo/service-snow-removal-ice-control.jpg",
+    "alt": "Shoveling snow from a driveway",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "service-debris-trash-removal": {
+    "src": "/demo/service-debris-trash-removal.jpg",
+    "alt": "Crew loading debris into a dumpster",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "service-property-inspections": {
+    "src": "/demo/service-property-inspections.jpg",
+    "alt": "Inspector checking a house exterior with a tablet",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "service-secure-and-stabilize": {
+    "src": "/demo/service-secure-and-stabilize.jpg",
+    "alt": "Vacant house with boarded windows",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "service-turnover-make-ready": {
+    "src": "/demo/service-turnover-make-ready.jpg",
+    "alt": "Painting an empty apartment during a turnover",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "service-commercial-maintenance": {
+    "src": "/demo/service-commercial-maintenance.jpg",
+    "alt": "Replacing a ceiling tile in an office corridor",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "industry-property-managers": {
+    "src": "/demo/industry-property-managers.jpg",
+    "alt": "Modern apartment building",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "industry-lenders-reo": {
+    "src": "/demo/industry-lenders-reo.jpg",
+    "alt": "Vacant house for sale",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "industry-investors": {
+    "src": "/demo/industry-investors.jpg",
+    "alt": "Investor and contractor reviewing renovation plans",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  },
+  "industry-hoa": {
+    "src": "/demo/industry-hoa.jpg",
+    "alt": "Townhouse community with a shared courtyard",
+    "credit": "AI-generated demo image",
+    "creditUrl": "",
+    "source": "AI"
+  }
+}

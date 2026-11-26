@@ -2,6 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
+import { refresh } from "next/cache";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth";
 import { createSession, destroySession } from "@/lib/auth/session";
@@ -39,6 +40,8 @@ export async function deleteLead(formData: FormData) {
   await requirePermission("requests.manage");
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  await db.lead.delete({ where: { id } });
-  redirect("/admin/leads");
+  // History and booking slots are removed with it (onDelete: Cascade), which frees any booked date.
+  await db.lead.deleteMany({ where: { id } });
+  if (formData.get("from") === "list") refresh(); // stay on the list
+  else redirect("/admin/leads");
 }

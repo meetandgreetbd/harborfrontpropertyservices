@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { sendMail } from "@/lib/email";
 import { site } from "@/lib/site";
+import { getSiteInfo } from "@/lib/data/settings";
 import { blocksFor, getAvailability, getSlotRules, isUniqueViolation, newBookingRef, parseYmd, type DayAvailability } from "@/lib/booking";
 
 const DAYS_SHOWN = 21;
@@ -119,7 +120,7 @@ export async function createBooking(_prev: BookingState, fd: FormData): Promise<
     } catch (e) {
       if (isUniqueViolation(e)) continue; // slot taken a moment ago — try the next one that day
       console.error("[booking] failed", e);
-      return { status: "error", message: `Something went wrong. Please call us on ${site.phone}.` };
+      return { status: "error", message: `Something went wrong. Please call us on ${(await getSiteInfo()).phone}.` };
     }
   }
   if (!booked) return { status: "error", message: "Sorry — that date just filled up. Please pick another." };
@@ -127,20 +128,23 @@ export async function createBooking(_prev: BookingState, fd: FormData): Promise<
   // Emails (a failure here doesn't undo the booking)
   const when = fmtWhen(start);
   const what = `${service.name}${option ? ` — ${option.name}` : ""}`;
+  const info = await getSiteInfo();
   try {
-    await sendMail({
-      to: process.env.LEAD_TO_EMAIL || site.email,
+    if (info.notify.newBookings)
+      await sendMail({
+      to: info.notify.emails.join(", "),
       replyTo: d.email,
       subject: `New ${instant ? "booking" : "booking request"} ${ref}: ${what} — ${when}`,
       text: `${kindText} ${ref}\n\nDate: ${when} (customer chose the date only — provisional arrival ${new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(start)}; call to agree a time)\nService: ${what}\nName: ${d.name}\nPhone: ${d.phone}\nEmail: ${d.email}\nAddress: ${d.address}\n${d.access ? `Access: ${d.access}\n` : ""}${d.notes ? `\nNotes:\n${d.notes}\n` : ""}\nOpen in admin: ${site.url}/admin/leads`,
     });
-    await sendMail({
+    if (info.notify.customerConfirmations)
+      await sendMail({
       to: d.email,
-      replyTo: process.env.LEAD_TO_EMAIL || site.email,
+      replyTo: info.email,
       subject: `${instant ? "Booking confirmed" : "Booking request received"} — ${ref}`,
       text: `Hi ${d.name.split(" ")[0]},\n\n${
         instant ? "Your booking is confirmed." : "Thanks — we've received your booking request and will confirm it shortly (usually the same business day)."
-      }\n\nReference: ${ref}\nService: ${what}\nDate: ${when}\nAddress: ${d.address}\n\nWe'll contact you before the visit to let you know our arrival time.\n\nNeed to change it? Call ${site.phone} or reply to this email.\n\n— ${site.name}`,
+      }\n\nReference: ${ref}\nService: ${what}\nDate: ${when}\nAddress: ${d.address}\n\nWe'll contact you before the visit to let you know our arrival time.\n\nNeed to change it? Call ${info.phone} or reply to this email.\n\n— ${site.name}`,
     });
   } catch (e) {
     console.error("[booking] email failed (booking saved)", e);

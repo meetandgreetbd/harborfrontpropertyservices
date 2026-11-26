@@ -1,4 +1,4 @@
-import { site } from "@/lib/site";
+import { PhoneLink } from "@/components/ui/ContactInfo";
 import { seoFor } from "@/lib/seo";
 import { PageHeader } from "@/components/sections/PageHeader";
 import { QuoteForm } from "@/components/forms/QuoteForm";
@@ -25,9 +25,7 @@ export default function WorkOrderPage() {
             <h2 className="h-card text-night">Sending a lot of orders?</h2>
             <p className="mt-4 text-[0.98rem] leading-relaxed text-muted">
               We can work from your portal, a shared spreadsheet or email — whatever your team already uses. Call{" "}
-              <a href={site.phoneHref} className="tabular font-medium text-night underline">
-                {site.phone}
-              </a>{" "}
+              <PhoneLink className="tabular font-medium text-night underline" />{" "}
               to set up an account with approval limits and monthly billing.
             </p>
           </aside>

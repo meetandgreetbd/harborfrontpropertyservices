@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { site } from "@/lib/site";
 
@@ -57,12 +58,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     // suppressHydrationWarning: extensions also edit <html>/<body> attributes directly
     <html lang="en" data-scroll-behavior="smooth" className={`${inter.variable} ${jakarta.variable}`} suppressHydrationWarning>
-      {process.env.NODE_ENV === "development" && (
-        <head>
-          <script dangerouslySetInnerHTML={{ __html: stripExtensionAttrs }} />
-        </head>
-      )}
       <body className="flex min-h-dvh flex-col" suppressHydrationWarning>
+        {/* beforeInteractive: Next injects it into <head> outside React's tree, so scripts that
+            other extensions insert into <head> (e.g. Three.js DevTools) can't shift it and cause a mismatch. */}
+        {process.env.NODE_ENV === "development" && (
+          <Script id="strip-extension-attrs" strategy="beforeInteractive">
+            {stripExtensionAttrs}
+          </Script>
+        )}
         {children}
       </body>
     </html>

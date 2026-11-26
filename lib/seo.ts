@@ -75,7 +75,7 @@ export const staticPages: StaticPageSeo[] = [
     path: "/contact",
     label: "Contact",
     title: "Contact Us",
-    description: `Call ${site.phone} or send a message to ${site.name}. Quotes, work orders and questions — we reply within one business day.`,
+    description: `Call or send a message to ${site.name}. Quotes, work orders and questions — we reply within one business day.`,
   },
   {
     path: "/faq",

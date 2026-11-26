@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { can, requireAdmin, requirePermission } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { sendMail } from "@/lib/email";
+import { getSiteInfo } from "@/lib/data/settings";
 import { site } from "@/lib/site";
 import { kindLabel, priorityMeta, priorityValues, sourceValues, statusMeta, statusValues } from "@/lib/leads";
 import { issuesToFieldErrors, type FormState } from "@/lib/validations/catalog";
@@ -152,7 +153,7 @@ async function emailAssignment(lead: AssignableLead, staff: { name: string; emai
   try {
     const result = await sendMail({
       to: staff.email,
-      replyTo: process.env.LEAD_TO_EMAIL || site.email,
+      replyTo: (await getSiteInfo()).email,
       subject: `Job assigned: ${what} — ${lead.address}`,
       text: [
         `Hi ${staff.name.split(" ")[0]},`,

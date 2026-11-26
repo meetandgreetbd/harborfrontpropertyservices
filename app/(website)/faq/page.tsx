@@ -1,6 +1,5 @@
 import { generalFaqs } from "@/lib/faqs";
 import { getAllFaqs } from "@/lib/data/catalog";
-import { site } from "@/lib/site";
 import { seoFor } from "@/lib/seo";
 import { faqSchema } from "@/lib/schema";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -40,7 +39,7 @@ export default async function FaqPage() {
 
       <CtaBand
         title="Still have a question?"
-        body={`Call ${site.phone} or send a message — we'll get back to you within one business day.`}
+        body="Call us or send a message — we'll get back to you within one business day."
       />
       <JsonLd data={faqSchema(publishable)} />
     </>

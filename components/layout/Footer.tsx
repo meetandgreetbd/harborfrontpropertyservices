@@ -5,6 +5,7 @@ import { site } from "@/lib/site";
 import { getPublishedAreas, getServices } from "@/lib/data/catalog";
 import { industries } from "@/lib/industries";
 import { Logo } from "./Logo";
+import { SocialLinks } from "@/components/ui/SocialLinks";
 
 async function CopyrightYear() {
   "use cache";
@@ -27,6 +28,7 @@ export async function Footer() {
           >
             <CalendarCheck size={16} /> Book online
           </Link>
+          <SocialLinks className="mt-7" />
         </div>
 
         <FooterCol title="Services" className="md:col-span-3">

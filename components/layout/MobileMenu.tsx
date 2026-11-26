@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
-import { mainNav, site } from "@/lib/site";
+import { mainNav } from "@/lib/site";
 
-export function MobileMenu() {
+export function MobileMenu({ phone, phoneHref }: { phone: string; phoneHref: string }) {
   const pathname = usePathname();
   // Remember which page the menu was opened on; navigating anywhere else closes it
   // (routes stay mounted with Cache Components, so a plain boolean would persist).
@@ -65,8 +65,8 @@ export function MobileMenu() {
             <Link href="/request-estimate" className="rounded-full bg-night px-5 py-4 text-center font-semibold text-white">
               Request a quote
             </Link>
-            <a href={site.phoneHref} className="rounded-full border border-line px-5 py-4 text-center font-semibold text-night">
-              Call {site.phone}
+            <a href={phoneHref} className="rounded-full border border-line px-5 py-4 text-center font-semibold text-night">
+              Call {phone}
             </a>
           </div>
         </nav>,

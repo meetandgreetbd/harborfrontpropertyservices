@@ -6,6 +6,7 @@ import { Check, Clock } from "lucide-react";
 import { getServiceBySlug, getServiceSlugs } from "@/lib/data/catalog";
 import { bookingModeLabel, formatPrice, priceTypeLabel } from "@/lib/catalog";
 import { site } from "@/lib/site";
+import { PhoneLink } from "@/components/ui/ContactInfo";
 import { pageMeta } from "@/lib/seo";
 import { serviceSchema } from "@/lib/schema";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -186,9 +187,7 @@ async function ServiceContent({ params }: { params: Promise<{ slug: string }> })
               </h2>
               <p className="mt-2 text-[0.95rem] text-muted">
                 Tell us about the job and the date you&apos;d like. Prefer to talk? Call{" "}
-                <a href={site.phoneHref} className="tabular font-semibold text-night underline">
-                  {site.phone}
-                </a>
+                <PhoneLink className="tabular font-semibold text-night underline" />
               </p>
               <div className="mt-6">
                 {/* Every service page: one quote form with a preferred date (no availability calendar). */}

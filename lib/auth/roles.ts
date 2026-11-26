@@ -17,12 +17,13 @@ export type Permission =
   | "requests.updateOwn" // change status / add notes on requests assigned to you
   | "staff.manage"
   | "catalog.manage" // services, categories, service areas
-  | "seo.manage"
+  | "seo.manage" // page SEO + analytics / tracking codes
+  | "settings.manage" // site info: contact details, address, hours, notification emails, social links
   | "users.manage";
 
 const grants: Record<Role, Permission[]> = {
-  admin: ["requests.viewAll", "requests.manage", "requests.updateOwn", "staff.manage", "catalog.manage", "seo.manage", "users.manage"],
-  manager: ["requests.viewAll", "requests.manage", "requests.updateOwn", "staff.manage", "catalog.manage", "seo.manage"],
+  admin: ["requests.viewAll", "requests.manage", "requests.updateOwn", "staff.manage", "catalog.manage", "seo.manage", "settings.manage", "users.manage"],
+  manager: ["requests.viewAll", "requests.manage", "requests.updateOwn", "staff.manage", "catalog.manage", "seo.manage", "settings.manage"],
   staff: ["requests.updateOwn"],
 };
 

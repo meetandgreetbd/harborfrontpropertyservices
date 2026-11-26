@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import Link from "next/link";
 import { CalendarCheck, CheckCircle2, MapPin, Phone } from "lucide-react";
 import { db } from "@/lib/db";
-import { site } from "@/lib/site";
+import { PhoneLink, PhoneText } from "@/components/ui/ContactInfo";
 import { pageMeta } from "@/lib/seo";
 import { ButtonLink } from "@/components/ui/Button";
 
@@ -38,7 +38,7 @@ async function Confirmation({ searchParams }: { searchParams: Promise<Record<str
     return (
       <div className="card p-8 text-center">
         <h1 className="font-display text-2xl font-extrabold text-night">Booking not found</h1>
-        <p className="mt-2 text-muted">Check the link in your confirmation email, or call {site.phone}.</p>
+        <p className="mt-2 text-muted">Check the link in your confirmation email, or call <PhoneText />.</p>
         <ButtonLink href="/book" className="mt-6">
           Make a booking
         </ButtonLink>
@@ -85,9 +85,9 @@ async function Confirmation({ searchParams }: { searchParams: Promise<Record<str
         </Row>
       </dl>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-canvas-2 px-6 py-5">
-        <a href={site.phoneHref} className="inline-flex items-center gap-2 font-semibold text-night hover:text-brand">
-          <Phone size={16} /> Need to change it? {site.phone}
-        </a>
+        <PhoneLink className="inline-flex items-center gap-2 font-semibold text-night hover:text-brand">
+          <Phone size={16} /> Need to change it? <PhoneText />
+        </PhoneLink>
         <Link href="/" className="inline-flex items-center gap-2 font-semibold text-brand hover:underline">
           <CalendarCheck size={16} /> Back to home
         </Link>

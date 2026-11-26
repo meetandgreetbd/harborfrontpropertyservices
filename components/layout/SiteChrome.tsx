@@ -4,6 +4,7 @@ import { MobileCallBar } from "./MobileCallBar";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { localBusinessSchema } from "@/lib/schema";
 import { getPublishedAreas } from "@/lib/data/catalog";
+import { getSiteInfo } from "@/lib/data/settings";
 
 /** Public website frame: skip link, header, footer, mobile call bar, LocalBusiness schema. */
 export function SiteChrome({ children }: { children: React.ReactNode }) {
@@ -31,5 +32,6 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
 }
 
 async function BusinessSchema() {
-  return <JsonLd data={localBusinessSchema(await getPublishedAreas())} />;
+  const [info, areas] = await Promise.all([getSiteInfo(), getPublishedAreas()]);
+  return <JsonLd data={localBusinessSchema(info, areas)} />;
 }

@@ -116,6 +116,54 @@ model PageSeo {
   updatedAt   DateTime @updatedAt
 }
 
+// ───────────────────────── Site settings ─────────────────────────
+
+/// One row (id = 1): business contact details, notification recipients, social links and
+/// analytics/tracking IDs — edited in Admin → Settings → Site info and Admin → SEO → Analytics.
+/// Empty values fall back to lib/site.ts.
+model SiteSettings {
+  id         Int     @id @default(1)
+  // Contact & address (NAP — keep identical to Google Business Profile)
+  phone      String  @default("") @db.VarChar(40)
+  email      String  @default("") @db.VarChar(200)
+  street     String  @default("") @db.VarChar(200)
+  city       String  @default("") @db.VarChar(100)
+  region     String  @default("") @db.VarChar(60)
+  postalCode String  @default("") @db.VarChar(20)
+  country    String  @default("US") @db.VarChar(2)
+  lat        Float?
+  lng        Float?
+  /// [{ day: 0-6 (Sun-Sat), open: bool, opens: "07:30", closes: "17:30" }]
+  hours      Json?
+
+  // Email notifications
+  notifyEmails          String  @default("") @db.VarChar(1000) // comma separated
+  notifyNewRequests     Boolean @default(true)
+  notifyNewBookings     Boolean @default(true)
+  customerConfirmations Boolean @default(true)
+
+  // Social profiles (full URLs)
+  googleBusiness String @default("") @db.VarChar(300)
+  facebook       String @default("") @db.VarChar(300)
+  instagram      String @default("") @db.VarChar(300)
+  linkedin       String @default("") @db.VarChar(300)
+  x              String @default("") @db.VarChar(300)
+  youtube        String @default("") @db.VarChar(300)
+  tiktok         String @default("") @db.VarChar(300)
+  yelp           String @default("") @db.VarChar(300)
+  nextdoor       String @default("") @db.VarChar(300)
+
+  // Analytics & tracking
+  googleTagIds       String @default("") @db.VarChar(300) // G-…, AW-… (comma separated)
+  gtmId              String @default("") @db.VarChar(40)
+  metaPixelId        String @default("") @db.VarChar(40)
+  clarityId          String @default("") @db.VarChar(40)
+  googleVerification String @default("") @db.VarChar(200)
+  bingVerification   String @default("") @db.VarChar(200)
+
+  updatedAt DateTime @updatedAt
+}
+
 // ───────────────────────── Services ─────────────────────────
 
 /// How a customer can book this service (doc/DATABASE-PLAN.md §4).

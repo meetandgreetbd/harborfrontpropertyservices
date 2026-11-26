@@ -1,7 +1,11 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { Plus, Search } from "lucide-react";
+import { Eye, Pencil, Phone, Plus, Search } from "lucide-react";
+import { deleteLead } from "@/app/admin/actions";
+import { DeleteButton } from "@/components/admin/RowActions";
+
+const iconBtn = "inline-flex h-8 w-8 items-center justify-center rounded-[3px] text-muted transition-colors hover:bg-canvas hover:text-night";
 import { db } from "@/lib/db";
 import { can, requireAdmin } from "@/lib/auth";
 import {
@@ -247,6 +251,7 @@ async function Leads({
                 <th className="px-4 py-3 font-medium">Scheduled</th>
                 <th className="px-4 py-3 font-medium">Priority</th>
                 <th className="px-4 py-3 font-medium">Received</th>
+                <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -295,6 +300,23 @@ async function Leads({
                   </td>
                   <td className="tabular whitespace-nowrap px-4 py-3 text-[0.84rem] text-muted">
                     {formatDate(l.createdAt)}
+                  </td>
+                  <td className="px-4 py-2">
+                    <div className="flex items-center justify-end gap-0.5">
+                      <Link href={`/admin/leads/${l.id}`} title="View request" className={iconBtn}>
+                        <Eye size={16} strokeWidth={1.75} />
+                        <span className="sr-only">View request from {l.name}</span>
+                      </Link>
+                      <Link href={`/admin/leads/${l.id}#manage`} title={canAssign ? "Edit — status, crew, schedule" : "Update status / add notes"} className={iconBtn}>
+                        <Pencil size={16} strokeWidth={1.75} />
+                        <span className="sr-only">Edit request from {l.name}</span>
+                      </Link>
+                      <a href={`tel:${l.phone.replace(/[^\d+]/g, "")}`} title={`Call ${l.phone}`} className={iconBtn}>
+                        <Phone size={16} strokeWidth={1.75} />
+                        <span className="sr-only">Call {l.name}</span>
+                      </a>
+                      {canAssign && <DeleteButton id={l.id} name={`request from ${l.name}`} action={deleteLead} />}
+                    </div>
                   </td>
                 </tr>
               ))}

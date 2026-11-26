@@ -1,11 +1,13 @@
 import { site } from "./site";
 import { absoluteUrl } from "./seo";
 import type { AreaSummary, ServiceDetail } from "./data/catalog";
+import { groupHours, type SiteInfo } from "./data/settings";
 
 const businessId = `${site.url}/#business`;
 
-export function localBusinessSchema(publishedAreas: AreaSummary[] = []) {
-  const sameAs = Object.values(site.social).filter(Boolean);
+/** Business details come from Admin → Settings → Site info (getSiteInfo). */
+export function localBusinessSchema(info: SiteInfo, publishedAreas: AreaSummary[] = []) {
+  const sameAs = Object.values(info.social).filter(Boolean);
   return {
     "@context": "https://schema.org",
     "@type": "HomeAndConstructionBusiness",
@@ -13,24 +15,26 @@ export function localBusinessSchema(publishedAreas: AreaSummary[] = []) {
     name: site.name,
     legalName: site.legalName,
     url: site.url,
-    telephone: site.phone,
-    email: site.email,
+    telephone: info.phone,
+    email: info.email,
     description: site.description,
     address: {
       "@type": "PostalAddress",
-      streetAddress: site.address.street,
-      addressLocality: site.address.city,
-      addressRegion: site.address.region,
-      postalCode: site.address.postalCode,
-      addressCountry: site.address.country,
+      streetAddress: info.address.street,
+      addressLocality: info.address.city,
+      addressRegion: info.address.region,
+      postalCode: info.address.postalCode,
+      addressCountry: info.address.country,
     },
-    geo: { "@type": "GeoCoordinates", latitude: site.geo.lat, longitude: site.geo.lng },
-    openingHoursSpecification: site.hours.map((h) => ({
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: h.schemaDays,
-      opens: h.opens,
-      closes: h.closes,
-    })),
+    ...(info.geo.lat || info.geo.lng ? { geo: { "@type": "GeoCoordinates", latitude: info.geo.lat, longitude: info.geo.lng } } : {}),
+    openingHoursSpecification: groupHours(info.hours)
+      .filter((h) => h.open)
+      .map((h) => ({
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: h.schemaDays,
+        opens: h.opens,
+        closes: h.closes,
+      })),
     areaServed: [
       { "@type": "City", name: site.primaryCity },
       ...publishedAreas.map((a) => ({ "@type": "City", name: `${a.city}, ${a.region}` })),

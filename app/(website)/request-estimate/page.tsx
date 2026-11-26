@@ -1,4 +1,4 @@
-import { site } from "@/lib/site";
+import { PhoneLink } from "@/components/ui/ContactInfo";
 import { seoFor } from "@/lib/seo";
 import { PageHeader } from "@/components/sections/PageHeader";
 import { QuoteForm } from "@/components/forms/QuoteForm";
@@ -30,9 +30,7 @@ export default function RequestEstimatePage() {
             </ol>
             <p className="mt-10 border-t border-line pt-6 text-[0.95rem] text-muted">
               Urgent? Call{" "}
-              <a href={site.phoneHref} className="tabular font-medium text-night underline">
-                {site.phone}
-              </a>
+              <PhoneLink className="tabular font-medium text-night underline" />
             </p>
           </aside>
         </div>

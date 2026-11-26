@@ -5,6 +5,7 @@ import { leadSchema, type Lead, type LeadFormState } from "@/lib/validations/lea
 import { site } from "@/lib/site";
 import { db } from "@/lib/db";
 import { sendMail } from "@/lib/email";
+import { getSiteInfo } from "@/lib/data/settings";
 
 /**
  * Handles quote requests and work orders.
@@ -39,7 +40,7 @@ export async function submitLead(_prev: LeadFormState, formData: FormData): Prom
     console.error("[lead] database save failed", err);
     return {
       status: "error",
-      message: `Something went wrong sending your request. Please call us on ${site.phone}.`,
+      message: `Something went wrong sending your request. Please call us on ${(await getSiteInfo()).phone}.`,
       values: raw,
     };
   }
@@ -115,24 +116,29 @@ function formatLead(lead: Lead) {
     .join("\n");
 }
 
+/** Recipients and on/off switches come from Admin → Settings → Site info → Email notifications. */
 async function deliver(lead: Lead, leadId: string) {
-  const to = process.env.LEAD_TO_EMAIL || site.email;
+  const info = await getSiteInfo();
   const subjectPrefix = lead.kind === "work-order" ? "Work order" : "Quote request";
 
-  await sendMail({
-    to,
-    replyTo: lead.email,
-    subject: `${subjectPrefix}: ${lead.service || "General"} — ${lead.address}`,
-    text: `${formatLead(lead)}\n\nAssign a crew member and schedule it: ${site.url}/admin/leads/${leadId}`,
-  });
+  if (info.notify.newRequests) {
+    await sendMail({
+      to: info.notify.emails.join(", "),
+      replyTo: lead.email,
+      subject: `${subjectPrefix}: ${lead.service || "General"} — ${lead.address}`,
+      text: `${formatLead(lead)}\n\nAssign a crew member and schedule it: ${site.url}/admin/leads/${leadId}`,
+    });
+  }
 
   // Confirmation to the customer (plain text keeps it personal and avoids spam filters).
-  await sendMail({
-    to: lead.email,
-    replyTo: to,
-    subject: `We received your request — ${site.name}`,
-    text: `Hi ${lead.name.split(" ")[0]},\n\nThanks for getting in touch. We've received your ${
-      lead.kind === "work-order" ? "work order" : "request"
-    } for ${lead.address} and will get back to you shortly, usually the same business day.\n\nIf it's urgent, call us on ${site.phone}.\n\n— ${site.owner.name}\n${site.name}`,
-  });
+  if (info.notify.customerConfirmations) {
+    await sendMail({
+      to: lead.email,
+      replyTo: info.email,
+      subject: `We received your request — ${site.name}`,
+      text: `Hi ${lead.name.split(" ")[0]},\n\nThanks for getting in touch. We've received your ${
+        lead.kind === "work-order" ? "work order" : "request"
+      } for ${lead.address} and will get back to you shortly, usually the same business day.\n\nIf it's urgent, call us on ${info.phone}.\n\n— ${site.owner.name}\n${site.name}`,
+    });
+  }
 }

@@ -167,7 +167,7 @@ async function LeadDetail({
             )}
           </section>
 
-          <section className="border border-line bg-white p-6">
+          <section id="manage" className="scroll-mt-6 border border-line bg-white p-6">
             <h2 className="font-sans text-[1rem] font-semibold text-night">
               Manage request
             </h2>

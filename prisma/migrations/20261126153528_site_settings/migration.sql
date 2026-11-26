@@ -1,0 +1,37 @@
+-- CreateTable
+CREATE TABLE `SiteSettings` (
+    `id` INTEGER NOT NULL DEFAULT 1,
+    `phone` VARCHAR(40) NOT NULL DEFAULT '',
+    `email` VARCHAR(200) NOT NULL DEFAULT '',
+    `street` VARCHAR(200) NOT NULL DEFAULT '',
+    `city` VARCHAR(100) NOT NULL DEFAULT '',
+    `region` VARCHAR(60) NOT NULL DEFAULT '',
+    `postalCode` VARCHAR(20) NOT NULL DEFAULT '',
+    `country` VARCHAR(2) NOT NULL DEFAULT 'US',
+    `lat` DOUBLE NULL,
+    `lng` DOUBLE NULL,
+    `hours` JSON NULL,
+    `notifyEmails` VARCHAR(1000) NOT NULL DEFAULT '',
+    `notifyNewRequests` BOOLEAN NOT NULL DEFAULT true,
+    `notifyNewBookings` BOOLEAN NOT NULL DEFAULT true,
+    `customerConfirmations` BOOLEAN NOT NULL DEFAULT true,
+    `googleBusiness` VARCHAR(300) NOT NULL DEFAULT '',
+    `facebook` VARCHAR(300) NOT NULL DEFAULT '',
+    `instagram` VARCHAR(300) NOT NULL DEFAULT '',
+    `linkedin` VARCHAR(300) NOT NULL DEFAULT '',
+    `x` VARCHAR(300) NOT NULL DEFAULT '',
+    `youtube` VARCHAR(300) NOT NULL DEFAULT '',
+    `tiktok` VARCHAR(300) NOT NULL DEFAULT '',
+    `yelp` VARCHAR(300) NOT NULL DEFAULT '',
+    `nextdoor` VARCHAR(300) NOT NULL DEFAULT '',
+    `googleTagIds` VARCHAR(300) NOT NULL DEFAULT '',
+    `gtmId` VARCHAR(40) NOT NULL DEFAULT '',
+    `metaPixelId` VARCHAR(40) NOT NULL DEFAULT '',
+    `clarityId` VARCHAR(40) NOT NULL DEFAULT '',
+    `googleVerification` VARCHAR(200) NOT NULL DEFAULT '',
+    `bingVerification` VARCHAR(200) NOT NULL DEFAULT '',
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+

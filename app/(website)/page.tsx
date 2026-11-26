@@ -16,6 +16,7 @@ import {
   Clock,
 } from "lucide-react";
 import { site } from "@/lib/site";
+import { PhoneText } from "@/components/ui/ContactInfo";
 import { industries } from "@/lib/industries";
 import { getPublishedAreas, getServices } from "@/lib/data/catalog";
 import { generalFaqs } from "@/lib/faqs";
@@ -274,7 +275,7 @@ export default async function HomePage() {
                 ))}
               </ul>
             ) : (
-              <p className="prose-body mt-5">Not sure if you&apos;re in range? Call {site.phone} and we&apos;ll tell you straight away.</p>
+              <p className="prose-body mt-5">Not sure if you&apos;re in range? Call <PhoneText /> and we&apos;ll tell you straight away.</p>
             )}
             <ButtonLink href="/service-areas" variant="secondary" className="mt-8">
               See all service areas <ArrowRight size={17} />

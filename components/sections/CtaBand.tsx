@@ -1,5 +1,5 @@
 import { CalendarCheck, Phone, FileText } from "lucide-react";
-import { site } from "@/lib/site";
+import { PhoneLink, PhoneText } from "@/components/ui/ContactInfo";
 import { ButtonLink } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 
@@ -30,9 +30,9 @@ export function CtaBand({
                 <ButtonLink href="/request-estimate" variant="outline-light">
                   <FileText size={18} /> Get a quote
                 </ButtonLink>
-                <a href={site.phoneHref} className="tabular inline-flex items-center justify-center gap-2 px-2 py-3 font-semibold text-white/90 hover:text-white">
-                  <Phone size={17} /> {site.phone}
-                </a>
+                <PhoneLink className="tabular inline-flex items-center justify-center gap-2 px-2 py-3 font-semibold text-white/90 hover:text-white">
+                  <Phone size={17} /> <PhoneText />
+                </PhoneLink>
               </div>
             </div>
           </div>

@@ -21,6 +21,8 @@ import {
   UserCog,
   CircleUser,
   Settings,
+  BarChart3,
+  Building2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -50,11 +52,20 @@ const nav: Entry[] = [
       { href: "/admin/areas", label: "Service areas", icon: MapPin },
     ],
   },
-  { href: "/admin/seo", label: "SEO", icon: Search, perm: "seo.manage" },
   {
-    label: "Users & roles",
+    label: "SEO",
+    icon: Search,
+    perm: "seo.manage",
+    items: [
+      { href: "/admin/seo", label: "Page SEO", icon: FileText },
+      { href: "/admin/seo/tracking", label: "Analytics & tracking", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Settings",
     icon: Settings,
     items: [
+      { href: "/admin/settings", label: "Site info", icon: Building2, perm: "settings.manage" },
       { href: "/admin/users", label: "Users & roles", icon: UserCog, perm: "users.manage" },
       { href: "/admin/staff", label: "Staff (crew)", icon: Users, perm: "staff.manage" },
       { href: "/admin/profile", label: "My profile", icon: CircleUser },

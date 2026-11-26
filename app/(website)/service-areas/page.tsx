@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getPublishedAreas } from "@/lib/data/catalog";
 import { site } from "@/lib/site";
+import { PhoneText } from "@/components/ui/ContactInfo";
 import { seoFor } from "@/lib/seo";
 import { PageHeader } from "@/components/sections/PageHeader";
 import { CtaBand } from "@/components/sections/CtaBand";
@@ -42,7 +43,7 @@ export default async function ServiceAreasPage() {
               </ul>
             ) : (
               <p className="prose-body">
-                City pages are being written. In the meantime, call {site.phone} to check if your property is in range.
+                City pages are being written. In the meantime, call <PhoneText /> to check if your property is in range.
               </p>
             )}
           </div>

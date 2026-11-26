@@ -1,4 +1,4 @@
-import { site } from "@/lib/site";
+import { EmailLink } from "@/components/ui/ContactInfo";
 import { seoFor } from "@/lib/seo";
 import { PageHeader } from "@/components/sections/PageHeader";
 
@@ -24,9 +24,7 @@ export default function PrivacyPage() {
           </p>
           <p>
             To ask what information we hold about you, or to have it deleted, email{" "}
-            <a href={`mailto:${site.email}`} className="text-night underline">
-              {site.email}
-            </a>
+            <EmailLink className="text-night underline" />
             .
           </p>
         </div>

@@ -13,11 +13,14 @@ export function LeadForm({
   kind = "estimate",
   defaultService,
   compact = false,
+  withDate = false,
   serviceNames,
 }: {
   kind?: "estimate" | "work-order";
   defaultService?: string;
   compact?: boolean;
+  /** Ask for a preferred date (date only, no time) — used on service pages. */
+  withDate?: boolean;
   serviceNames: string[];
 }) {
   const [state, action, pending] = useActionState(submitLead, initial);
@@ -99,6 +102,17 @@ export function LeadForm({
           <Field label="Due date" name="dueDate" type="date" defaultValue={v.dueDate} hint="Optional" />
         )}
       </div>
+
+      {withDate && kind === "estimate" && (
+        <Field
+          label="Preferred date"
+          name="preferredDate"
+          type="date"
+          error={err("preferredDate")}
+          defaultValue={v.preferredDate}
+          hint="Optional — we'll confirm the arrival time"
+        />
+      )}
 
       {kind === "work-order" && (
         <Field

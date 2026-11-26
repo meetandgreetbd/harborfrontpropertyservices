@@ -23,6 +23,7 @@ import {
   formatDateTime,
 } from "@/components/admin/ui";
 import { QuickStatus } from "@/components/admin/QuickStatus";
+import { QuickAssign } from "@/components/admin/QuickAssign";
 
 export const metadata = { title: "Service requests" };
 
@@ -45,6 +46,7 @@ async function Leads({
   const user = await requireAdmin();
   // Staff logins only ever see requests assigned to them.
   const seesAll = can(user.role, "requests.viewAll");
+  const canAssign = can(user.role, "requests.manage"); // admins + managers assign work; staff just see who has it
   const scope: Prisma.LeadWhereInput = seesAll
     ? {}
     : { assignedToId: user.staffId ?? "__no_staff__" };
@@ -97,7 +99,7 @@ async function Leads({
     }),
     db.staff.findMany({
       orderBy: [{ isActive: "desc" }, { name: "asc" }],
-      select: { id: true, name: true, isActive: true },
+      select: { id: true, name: true, color: true, isActive: true },
     }),
     db.lead.groupBy({ by: ["status"], where: scope, _count: { _all: true } }),
   ]);
@@ -273,11 +275,17 @@ async function Leads({
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <AssigneeBadge staff={l.assignedTo} />
+                    {canAssign ? (
+                      <QuickAssign id={l.id} assignedToId={l.assignedToId} staff={staff} />
+                    ) : (
+                      <AssigneeBadge staff={l.assignedTo} />
+                    )}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-[0.84rem] text-ink/80">
                     {l.scheduledFor ? (
                       formatDateTime(l.scheduledFor)
+                    ) : l.dueDate ? (
+                      <span title="Date the customer asked for">Preferred {l.dueDate}</span>
                     ) : (
                       <span className="text-muted">—</span>
                     )}
@@ -299,9 +307,10 @@ async function Leads({
           )}
         </div>
         <p className="mt-3 text-[0.8rem] text-muted">
-          {leads.length} shown{leads.length === 300 && " (latest 300)"}. Change
-          a status straight from the table, or open a request to assign and
-          schedule it.
+          {leads.length} shown{leads.length === 300 && " (latest 300)"}.{" "}
+          {canAssign
+            ? "Change the status or assign a crew member straight from the table — they're emailed the job. Open a request to schedule it."
+            : "Change a status straight from the table, or open a request to add notes."}
         </p>
       </div>
     </>

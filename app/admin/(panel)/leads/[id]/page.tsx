@@ -69,10 +69,11 @@ async function LeadDetail({
     }),
     getStaffOptions(),
   ]);
-  // Staff logins can only open jobs assigned to them.
+  // Staff logins can only open jobs assigned to them. A login not yet linked to a crew record (staffId null)
+  // must not match unassigned jobs (assignedToId null), so require a staffId.
   if (
     !lead ||
-    (!can(user.role, "requests.viewAll") && lead.assignedToId !== user.staffId)
+    (!can(user.role, "requests.viewAll") && (!user.staffId || lead.assignedToId !== user.staffId))
   )
     notFound();
 
@@ -85,7 +86,7 @@ async function LeadDetail({
       ["Property type", lead.propertyType],
       ["Company", lead.company],
       ["Loan / property / PO #", lead.reference],
-      ["Due date", lead.dueDate],
+      [lead.kind === "estimate" ? "Preferred date" : "Due date", lead.dueDate],
       ["Access", lead.access],
       ["Source", sourceLabel(lead.source)],
     ] as [string, string][]

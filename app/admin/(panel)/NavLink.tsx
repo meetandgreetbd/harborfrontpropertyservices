@@ -19,7 +19,6 @@ import {
   FolderTree,
   FileText,
   UserCog,
-  Clock,
   CircleUser,
   Settings,
   type LucideIcon,
@@ -37,8 +36,6 @@ const nav: Entry[] = [
     items: [
       { href: "/admin/leads", label: "All requests", icon: List },
       { href: "/admin/leads/new", label: "New request", icon: PlusCircle, perm: "requests.manage" },
-      { href: "/admin/staff", label: "Staff", icon: Users, perm: "staff.manage" },
-      { href: "/admin/availability", label: "Availability", icon: Clock, perm: "requests.manage" },
     ],
   },
   {
@@ -55,10 +52,11 @@ const nav: Entry[] = [
   },
   { href: "/admin/seo", label: "SEO", icon: Search, perm: "seo.manage" },
   {
-    label: "Settings",
+    label: "Users & roles",
     icon: Settings,
     items: [
       { href: "/admin/users", label: "Users & roles", icon: UserCog, perm: "users.manage" },
+      { href: "/admin/staff", label: "Staff (crew)", icon: Users, perm: "staff.manage" },
       { href: "/admin/profile", label: "My profile", icon: CircleUser },
     ],
   },

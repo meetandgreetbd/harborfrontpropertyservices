@@ -7,17 +7,10 @@ import { roles } from "@/lib/auth/roles";
 import type { FormState } from "@/lib/validations/catalog";
 import { Field, Select, Toggle } from "./form";
 
-export type UserFormData = { id: string; name: string; email: string; role: string; staffId: string; isActive: boolean };
+export type UserFormData = { id: string; name: string; email: string; role: string; isActive: boolean };
 
-export function UserForm({
-  user,
-  staffOptions,
-  isSelf = false,
-}: {
-  user: UserFormData;
-  staffOptions: { id: string; name: string; takenBy: string | null }[];
-  isSelf?: boolean;
-}) {
+/** Login + role only. Crew records are created (and linked to a user) under Staff (crew) → Add staff member. */
+export function UserForm({ user, isSelf = false }: { user: UserFormData; isSelf?: boolean }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveUser, { status: "idle" });
   const [role, setRole] = useState(user.role);
   const err = (k: string) => state.fieldErrors?.[k];
@@ -42,25 +35,14 @@ export function UserForm({
             </option>
           ))}
         </Select>
-        <Select
-          label="Linked crew member"
-          name="staffId"
-          id={p + "staffId"}
-          defaultValue={user.staffId}
-          error={err("staffId")}
-          hint={role === "staff" ? "Required" : "Optional"}
-        >
-          <option value="">{role === "staff" ? "Choose…" : "None"}</option>
-          {staffOptions.map((s) => (
-            <option key={s.id} value={s.id} disabled={Boolean(s.takenBy) && s.id !== user.staffId}>
-              {s.name}
-              {s.takenBy && s.id !== user.staffId ? ` (login: ${s.takenBy})` : ""}
-            </option>
-          ))}
-        </Select>
       </div>
       {isSelf && <input type="hidden" name="role" value={user.role} />}
       <p className="text-[0.8rem] text-muted">{roles.find((r) => r.value === role)?.description}</p>
+      {role === "staff" && (
+        <p className="border-l-2 border-brand/40 pl-3 text-[0.8rem] text-muted">
+          To assign jobs to this person, add them under <strong>Staff (crew) → Add staff member</strong> after saving.
+        </p>
+      )}
 
       <Field
         label={user.id ? "New password" : "Password"}

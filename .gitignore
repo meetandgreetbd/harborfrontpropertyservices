@@ -49,3 +49,6 @@ next-env.d.ts
 
 # all markdown docs (plans, README, notes)
 *.md
+
+# Uploaded images (admin service photos) — back these up with the database
+/uploads/

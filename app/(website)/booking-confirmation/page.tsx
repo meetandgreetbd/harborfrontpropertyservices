@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import Link from "next/link";
-import { CalendarCheck, CheckCircle2, Clock, MapPin, Phone } from "lucide-react";
+import { CalendarCheck, CheckCircle2, MapPin, Phone } from "lucide-react";
 import { db } from "@/lib/db";
 import { site } from "@/lib/site";
 import { pageMeta } from "@/lib/seo";
@@ -47,8 +47,9 @@ async function Confirmation({ searchParams }: { searchParams: Promise<Record<str
   }
 
   const confirmed = booking.serviceRef?.bookingMode === "INSTANT" || booking.status === "scheduled";
+  // Customers book a date only; the arrival time is agreed afterwards, so show the day.
   const when = booking.scheduledFor
-    ? new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" }).format(booking.scheduledFor)
+    ? new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }).format(booking.scheduledFor)
     : "";
 
   return (
@@ -59,7 +60,9 @@ async function Confirmation({ searchParams }: { searchParams: Promise<Record<str
         </span>
         <h1 className="mt-5 font-display text-[1.9rem] font-extrabold">{confirmed ? "You're booked!" : "Request received!"}</h1>
         <p className="mt-2 text-white/85">
-          {confirmed ? "Your time is confirmed. A confirmation email is on its way." : "We'll confirm your time shortly — usually the same business day."}
+          {confirmed
+            ? "Your date is confirmed — we'll contact you with the arrival time. A confirmation email is on its way."
+            : "We'll confirm your date and arrival time shortly — usually the same business day."}
         </p>
       </div>
       <dl className="divide-y divide-line">
@@ -70,9 +73,9 @@ async function Confirmation({ searchParams }: { searchParams: Promise<Record<str
           {booking.service}
           {booking.optionName && ` — ${booking.optionName}`}
         </Row>
-        <Row label="When">
+        <Row label="Date">
           <span className="inline-flex items-center gap-1.5">
-            <Clock size={15} className="text-brand" /> {when}
+            <CalendarCheck size={15} className="text-brand" /> {when}
           </span>
         </Row>
         <Row label="Address">

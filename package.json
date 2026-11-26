@@ -12,6 +12,7 @@
     "db:studio": "prisma studio",
     "admin:create": "tsx scripts/create-admin.ts",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:demo": "tsx prisma/seed-demo.ts",
     "photos:demo": "tsx scripts/fetch-demo-photos.ts"
   },
   "dependencies": {

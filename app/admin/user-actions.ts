@@ -16,7 +16,6 @@ const userSchema = z.object({
   name: z.string().trim().min(2, "Enter a name").max(100),
   email: z.email("Enter a valid email").max(200),
   role: z.enum(roleValues as [string, ...string[]]),
-  staffId: z.string().default(""),
   isActive: z.literal("on").optional(),
   password: z.string().default(""),
 });
@@ -26,6 +25,10 @@ async function otherActiveAdmins(excludeId: string) {
   return db.user.count({ where: { role: "admin", isActive: true, NOT: { id: excludeId } } });
 }
 
+/**
+ * Create / edit a login and its role. The crew record is separate: Staff (crew) → Add staff member links a
+ * crew member to a user (see saveStaff), so this never touches User.staffId.
+ */
 export async function saveUser(_prev: FormState, fd: FormData): Promise<FormState> {
   const me = await requirePermission("users.manage");
   const parsed = userSchema.safeParse(Object.fromEntries(fd));
@@ -33,10 +36,6 @@ export async function saveUser(_prev: FormState, fd: FormData): Promise<FormStat
   const d = parsed.data;
   const email = d.email.toLowerCase();
   const isActive = d.isActive === "on";
-  const staffId = d.staffId || null;
-
-  if (d.role === "staff" && !staffId)
-    return { status: "error", message: "A Staff login must be linked to a crew member.", fieldErrors: { staffId: "Choose which crew member this login is for" } };
 
   // Password: required for new users, optional when editing (blank = keep current)
   if (!d.id || d.password) {
@@ -46,10 +45,6 @@ export async function saveUser(_prev: FormState, fd: FormData): Promise<FormStat
 
   const emailClash = await db.user.findFirst({ where: { email, NOT: d.id ? { id: d.id } : undefined }, select: { id: true } });
   if (emailClash) return { status: "error", message: "That email already has an account.", fieldErrors: { email: "Already in use" } };
-  if (staffId) {
-    const staffClash = await db.user.findFirst({ where: { staffId, NOT: d.id ? { id: d.id } : undefined }, select: { name: true } });
-    if (staffClash) return { status: "error", message: `That crew member already has a login (${staffClash.name}).`, fieldErrors: { staffId: "Already linked to another login" } };
-  }
 
   if (d.id) {
     const existing = await db.user.findUnique({ where: { id: d.id } });
@@ -61,22 +56,13 @@ export async function saveUser(_prev: FormState, fd: FormData): Promise<FormStat
 
     await db.user.update({
       where: { id: d.id },
-      data: {
-        name: d.name,
-        email,
-        role: d.role,
-        staffId, // required for Staff logins; optional for admins/managers who also work jobs
-        isActive,
-        ...(d.password ? { passwordHash: await bcrypt.hash(d.password, 12) } : {}),
-      },
+      data: { name: d.name, email, role: d.role, isActive, ...(d.password ? { passwordHash: await bcrypt.hash(d.password, 12) } : {}) },
     });
     refresh();
     return { status: "saved", message: d.password ? "Saved. New password set." : "Saved." };
   }
 
-  const user = await db.user.create({
-    data: { name: d.name, email, role: d.role, staffId, isActive, passwordHash: await bcrypt.hash(d.password, 12) },
-  });
+  const user = await db.user.create({ data: { name: d.name, email, role: d.role, isActive, passwordHash: await bcrypt.hash(d.password, 12) } });
   redirect(`/admin/users?created=${user.id}`);
 }
 

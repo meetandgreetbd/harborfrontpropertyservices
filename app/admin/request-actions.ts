@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { refresh } from "next/cache";
 import { db } from "@/lib/db";
 import { can, requireAdmin, requirePermission } from "@/lib/auth";
+import bcrypt from "bcryptjs";
 import { sendMail } from "@/lib/email";
 import { site } from "@/lib/site";
 import { kindLabel, priorityMeta, priorityValues, sourceValues, statusMeta, statusValues } from "@/lib/leads";
@@ -118,47 +119,98 @@ export async function updateRequest(_prev: FormState, fd: FormData): Promise<For
 
   // Email the newly assigned crew member (or on request, re-send to the current one)
   const newlyAssigned = staff && lead.assignedToId !== staff.id;
-  let emailNote = "";
-  if (staff?.email && (newlyAssigned || d.notifyStaff)) {
-    try {
-      const result = await sendMail({
-        to: staff.email,
-        replyTo: process.env.LEAD_TO_EMAIL || site.email,
-        subject: `Job assigned: ${lead.service || kindLabel(lead.kind)} — ${lead.address}`,
-        text: [
-          `Hi ${staff.name.split(" ")[0]},`,
-          ``,
-          `You've been assigned a job.`,
-          ``,
-          `Service: ${lead.service || kindLabel(lead.kind)}`,
-          `Address: ${lead.address}`,
-          `When: ${fmt(d.scheduledFor)}`,
-          `Priority: ${priorityMeta(d.priority).label}`,
-          lead.access ? `Access: ${lead.access}` : "",
-          `Customer: ${lead.name} · ${lead.phone}`,
-          ``,
-          `Details:`,
-          lead.message,
-          ``,
-          `Open in admin: ${site.url}/admin/leads/${lead.id}`,
-        ]
-          .filter((l) => l !== "")
-          .join("\n"),
-      });
-      if (result === "sent") {
-        await db.leadActivity.create({ data: { leadId: d.id, type: "assigned", message: `Job details emailed to ${staff.name}`, byName: admin.name } });
-        emailNote = ` ${staff.name} was emailed the job details.`;
-      } else {
-        emailNote = ` Email to ${staff.name} not sent — SMTP isn't set up yet (see .env).`;
-      }
-    } catch (err) {
-      console.error("[request] staff email failed", err);
-      emailNote = ` (Couldn't email ${staff.name} — check SMTP settings.)`;
-    }
-  }
+  const emailNote =
+    staff && (newlyAssigned || d.notifyStaff)
+      ? await emailAssignment({ ...lead, scheduledFor: d.scheduledFor, priority: d.priority }, staff, admin.name)
+      : "";
 
   refresh();
   return { status: "saved", message: `Saved.${emailNote}` };
+}
+
+// ───────────── Assignment email (shared) ─────────────
+
+type AssignableLead = {
+  id: string;
+  kind: string;
+  service: string;
+  address: string;
+  access: string;
+  name: string;
+  phone: string;
+  message: string;
+  priority: string;
+  scheduledFor: Date | null;
+  dueDate: string;
+};
+
+/** Emails a crew member the job details and logs it. Returns a short note for the admin ("" if they have no email). */
+async function emailAssignment(lead: AssignableLead, staff: { name: string; email: string }, byName: string) {
+  if (!staff.email) return ` ${staff.name} has no email address, so they weren't notified.`;
+  const what = lead.service || kindLabel(lead.kind);
+  const when = lead.scheduledFor ? fmt(lead.scheduledFor) : lead.dueDate ? `Customer's preferred date: ${lead.dueDate}` : "Not scheduled yet";
+  try {
+    const result = await sendMail({
+      to: staff.email,
+      replyTo: process.env.LEAD_TO_EMAIL || site.email,
+      subject: `Job assigned: ${what} — ${lead.address}`,
+      text: [
+        `Hi ${staff.name.split(" ")[0]},`,
+        ``,
+        `You've been assigned a job.`,
+        ``,
+        `Service: ${what}`,
+        `Address: ${lead.address}`,
+        `When: ${when}`,
+        `Priority: ${priorityMeta(lead.priority).label}`,
+        lead.access ? `Access: ${lead.access}` : "",
+        `Customer: ${lead.name} · ${lead.phone}`,
+        ``,
+        `Details:`,
+        lead.message,
+        ``,
+        `Open in admin: ${site.url}/admin/leads/${lead.id}`,
+      ]
+        .filter((l) => l !== "")
+        .join("\n"),
+    });
+    if (result !== "sent") return ` Email to ${staff.name} not sent — SMTP isn't set up yet (see .env).`;
+    await db.leadActivity.create({ data: { leadId: lead.id, type: "assigned", message: `Job details emailed to ${staff.name}`, byName } });
+    return ` ${staff.name} was emailed the job details.`;
+  } catch (err) {
+    console.error("[request] staff email failed", err);
+    return ` (Couldn't email ${staff.name} — check SMTP settings.)`;
+  }
+}
+
+// ───────────── Quick assign from the requests list ─────────────
+
+export async function quickAssign(fd: FormData): Promise<{ ok: boolean; message: string }> {
+  const admin = await requirePermission("requests.manage");
+  const id = String(fd.get("id") ?? "");
+  const assignedToId = String(fd.get("assignedToId") ?? "") || null;
+
+  const lead = await db.lead.findUnique({ where: { id }, include: { assignedTo: true } });
+  if (!lead) return { ok: false, message: "This request no longer exists." };
+  if ((lead.assignedToId ?? null) === assignedToId) return { ok: true, message: "" };
+
+  const staff = assignedToId ? await db.staff.findUnique({ where: { id: assignedToId } }) : null;
+  if (assignedToId && (!staff || !staff.isActive)) return { ok: false, message: "That staff member isn't available." };
+
+  await db.$transaction([
+    db.lead.update({ where: { id }, data: { assignedToId } }),
+    db.leadActivity.create({
+      data: {
+        leadId: id,
+        type: "assigned",
+        byName: admin.name,
+        message: staff ? `Assigned to ${staff.name}` : `Unassigned (was ${lead.assignedTo?.name ?? "nobody"})`,
+      },
+    }),
+  ]);
+  const note = staff ? await emailAssignment(lead, staff, admin.name) : "";
+  refresh();
+  return { ok: true, message: staff ? `Assigned to ${staff.name}.${note}` : "Unassigned." };
 }
 
 // ───────────── Create a request manually (phone call, email…) ─────────────
@@ -213,6 +265,7 @@ export async function createRequest(_prev: FormState, fd: FormData): Promise<For
       },
     },
   });
+  if (staff) await emailAssignment(lead, staff, admin.name); // notify the crew member, same as assigning later
   redirect(`/admin/leads/${lead.id}?created=1`);
 }
 
@@ -252,16 +305,74 @@ const staffSchema = z.object({
   isActive: z.literal("on").optional(),
 });
 
+/** Edit a crew member. */
 export async function saveStaff(_prev: FormState, fd: FormData): Promise<FormState> {
   await requirePermission("staff.manage");
   const parsed = staffSchema.safeParse(Object.fromEntries(fd));
   if (!parsed.success) return { status: "error", message: "Please fix the highlighted fields.", fieldErrors: issuesToFieldErrors(parsed.error.issues) };
   const { id, isActive, ...data } = parsed.data;
-  const values = { ...data, notes: data.notes || null, isActive: isActive === "on" };
-  if (id) await db.staff.update({ where: { id }, data: values });
-  else await db.staff.create({ data: values });
+  if (!id) return { status: "error", message: "Use “Add staff member” to add someone new." };
+  await db.staff.update({ where: { id }, data: { ...data, notes: data.notes || null, isActive: isActive === "on" } });
   refresh();
-  return { status: "saved", message: id ? "Saved." : `${data.name} added.` };
+  return { status: "saved", message: "Saved." };
+}
+
+const addStaffSchema = z.object({
+  mode: z.enum(["existing", "new"]),
+  userId: z.string().default(""),
+  name: z.string().trim().max(100).default(""),
+  email: z.string().trim().max(200).default(""),
+  password: z.string().default(""),
+  role: z.string().trim().max(100).default(""), // job title
+  phone: z.string().trim().max(30).default(""),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Pick a colour")
+    .default("#56664b"),
+  notes: z.string().trim().max(2000).default(""),
+  isActive: z.literal("on").optional(),
+});
+
+/**
+ * Add a crew member. Every crew member has a login:
+ *  - "existing": link a user picked in the search (any role; admins/managers who also do jobs)
+ *  - "new": create a user with the Staff role + the crew record together
+ */
+export async function addStaff(_prev: FormState, fd: FormData): Promise<FormState> {
+  await requirePermission("staff.manage");
+  const parsed = addStaffSchema.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) return { status: "error", message: "Please fix the highlighted fields.", fieldErrors: issuesToFieldErrors(parsed.error.issues) };
+  const d = parsed.data;
+  const crew = { role: d.role, phone: d.phone, color: d.color, notes: d.notes || null, isActive: d.isActive === "on" };
+
+  if (d.mode === "existing") {
+    if (!d.userId) return { status: "error", message: "Search for and pick a user.", fieldErrors: { userId: "Pick a user" } };
+    const user = await db.user.findUnique({ where: { id: d.userId }, select: { id: true, name: true, email: true, staffId: true } });
+    if (!user) return { status: "error", message: "That user no longer exists.", fieldErrors: { userId: "Pick the user again" } };
+    if (user.staffId) return { status: "error", message: `${user.name} is already a crew member.`, fieldErrors: { userId: "Already a crew member" } };
+    await db.$transaction(async (tx) => {
+      const staff = await tx.staff.create({ data: { ...crew, name: user.name, email: user.email } });
+      await tx.user.update({ where: { id: user.id }, data: { staffId: staff.id } });
+    });
+    redirect(`/admin/staff?added=${encodeURIComponent(user.name)}`);
+  }
+
+  // New user with the Staff role
+  const fieldErrors: Record<string, string> = {};
+  if (d.name.length < 2) fieldErrors.name = "Enter a name";
+  const email = d.email.toLowerCase();
+  if (!z.email().safeParse(email).success) fieldErrors.email = "Enter a valid email";
+  if (d.password.length < 10) fieldErrors.password = "Use at least 10 characters";
+  if (Object.keys(fieldErrors).length) return { status: "error", message: "Please fix the highlighted fields.", fieldErrors };
+  if (await db.user.findUnique({ where: { email }, select: { id: true } }))
+    return { status: "error", message: "That email already has a login — use “Existing user” instead.", fieldErrors: { email: "Already in use" } };
+
+  const passwordHash = await bcrypt.hash(d.password, 12);
+  await db.$transaction(async (tx) => {
+    const staff = await tx.staff.create({ data: { ...crew, name: d.name, email } });
+    await tx.user.create({ data: { name: d.name, email, role: "staff", isActive: crew.isActive, passwordHash, staffId: staff.id } });
+  });
+  redirect(`/admin/staff?added=${encodeURIComponent(d.name)}`);
 }
 
 export async function deleteStaff(fd: FormData) {
@@ -270,6 +381,7 @@ export async function deleteStaff(fd: FormData) {
   const count = await db.lead.count({ where: { assignedToId: id } });
   // Keep history intact: staff with jobs are deactivated, not deleted.
   if (count > 0) await db.staff.update({ where: { id }, data: { isActive: false } });
-  else await db.staff.delete({ where: { id } });
+  else await db.staff.delete({ where: { id } }); // the linked login stays (User.staffId is cleared)
+  if (fd.get("from") === "list") return refresh();
   redirect("/admin/staff");
 }

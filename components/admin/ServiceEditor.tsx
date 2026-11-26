@@ -2,13 +2,14 @@
 
 import { useActionState, useState, startTransition } from "react";
 import Link from "next/link";
-import { Plus, Trash2, ArrowUp, ArrowDown, Star, Globe, FileText } from "lucide-react";
+import { Plus, Trash2, ArrowUp, ArrowDown, Globe, FileText } from "lucide-react";
 import clsx from "clsx";
 import { saveService } from "@/app/admin/catalog-actions";
 import type { FormState } from "@/lib/validations/catalog";
 import { bookingModes, priceTypes, slugify } from "@/lib/catalog";
 import { ServiceIcon, serviceIconKeys, serviceIcons } from "@/lib/service-icons";
 import { Card, Field, Select, TextArea, Toggle, SeoPanel, SaveBar, inputCls, ErrorText } from "./form";
+import { PhotoManager } from "./PhotoManager";
 
 export type ServiceEditorData = {
   id: string;
@@ -252,58 +253,8 @@ export function ServiceEditor({
             ))}
           </Card>
 
-          <Card
-            title="Photos"
-            description="Put files in /public/photos and enter /photos/name.jpg, or paste a full https:// link. Alt text is required."
-            aside={
-              <AddButton onClick={() => setImages([...images, { url: "", alt: "", caption: "", isCover: images.length === 0 }])}>
-                Add photo
-              </AddButton>
-            }
-          >
-            {images.length === 0 && <Empty>No photos — a labelled placeholder is shown on the page.</Empty>}
-            {images.map((img, i) => (
-              <Row
-                key={i}
-                index={i}
-                count={images.length}
-                onMove={(d) => setImages(move(images, i, d))}
-                onRemove={() => setImages(images.filter((_, j) => j !== i))}
-              >
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <MiniInput
-                    label="Image URL"
-                    value={img.url}
-                    placeholder="/photos/turnover-kitchen.jpg"
-                    error={err(`images.${i}.url`)}
-                    onChange={(v) => setImages(images.map((x, j) => (j === i ? { ...x, url: v } : x)))}
-                  />
-                  <MiniInput
-                    label="Alt text (describe the photo)"
-                    value={img.alt}
-                    error={err(`images.${i}.alt`)}
-                    onChange={(v) => setImages(images.map((x, j) => (j === i ? { ...x, alt: v } : x)))}
-                  />
-                </div>
-                <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-                  <MiniInput
-                    label="Caption (optional)"
-                    value={img.caption}
-                    onChange={(v) => setImages(images.map((x, j) => (j === i ? { ...x, caption: v } : x)))}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setImages(images.map((x, j) => ({ ...x, isCover: j === i })))}
-                    className={clsx(
-                      "inline-flex items-center gap-1.5 rounded-[3px] border px-3 py-2 text-[0.82rem]",
-                      img.isCover ? "border-night bg-night text-canvas" : "border-line text-night hover:border-night",
-                    )}
-                  >
-                    <Star size={14} /> {img.isCover ? "Cover photo" : "Make cover"}
-                  </button>
-                </div>
-              </Row>
-            ))}
+          <Card title="Photos" description="Upload job photos (or add by link). Alt text is required. The cover photo is shown at the top of the page.">
+            <PhotoManager photos={images} onChange={setImages} errorFor={err} />
           </Card>
 
           <Card title="SEO" description="How this page appears in Google.">

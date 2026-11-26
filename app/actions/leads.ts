@@ -32,8 +32,9 @@ export async function submitLead(_prev: LeadFormState, formData: FormData): Prom
   }
 
   // 1) Save first, so a lead is never lost even if email fails.
+  let leadId = "";
   try {
-    await saveLead(parsed.data);
+    leadId = await saveLead(parsed.data);
   } catch (err) {
     console.error("[lead] database save failed", err);
     return {
@@ -45,7 +46,7 @@ export async function submitLead(_prev: LeadFormState, formData: FormData): Prom
 
   // 2) Notify by email. Failure is logged; the lead is already in the admin dashboard.
   try {
-    await deliver(parsed.data);
+    await deliver(parsed.data, leadId);
   } catch (err) {
     console.error("[lead] email delivery failed (lead saved)", err);
   }
@@ -59,8 +60,10 @@ export async function submitLead(_prev: LeadFormState, formData: FormData): Prom
   };
 }
 
-async function saveLead(lead: Lead) {
-  await db.lead.create({
+/** Saves the request and returns its id (used for the "assign it" link in the office email). */
+async function saveLead(lead: Lead): Promise<string> {
+  const { id } = await db.lead.create({
+    select: { id: true },
     data: {
       kind: lead.kind,
       name: lead.name,
@@ -71,7 +74,7 @@ async function saveLead(lead: Lead) {
       message: lead.message,
       ...(lead.kind === "work-order"
         ? { company: lead.company, reference: lead.reference, dueDate: lead.dueDate, access: lead.access }
-        : { propertyType: lead.propertyType }),
+        : { propertyType: lead.propertyType, dueDate: lead.preferredDate }), // preferred visit date shows as "Due date" in admin
       source: "website",
       activities: {
         create: {
@@ -82,6 +85,7 @@ async function saveLead(lead: Lead) {
       },
     },
   });
+  return id;
 }
 
 function formatLead(lead: Lead) {
@@ -94,7 +98,10 @@ function formatLead(lead: Lead) {
           ["Due date", lead.dueDate],
           ["Access", lead.access],
         ] as [string, string][])
-      : ([["Property type", lead.propertyType]] as [string, string][])),
+      : ([
+          ["Property type", lead.propertyType],
+          ["Preferred date", lead.preferredDate],
+        ] as [string, string][])),
     ["Name", lead.name],
     ["Email", lead.email],
     ["Phone", lead.phone],
@@ -108,7 +115,7 @@ function formatLead(lead: Lead) {
     .join("\n");
 }
 
-async function deliver(lead: Lead) {
+async function deliver(lead: Lead, leadId: string) {
   const to = process.env.LEAD_TO_EMAIL || site.email;
   const subjectPrefix = lead.kind === "work-order" ? "Work order" : "Quote request";
 
@@ -116,7 +123,7 @@ async function deliver(lead: Lead) {
     to,
     replyTo: lead.email,
     subject: `${subjectPrefix}: ${lead.service || "General"} — ${lead.address}`,
-    text: `${formatLead(lead)}\n\nOpen in admin: ${site.url}/admin/leads`,
+    text: `${formatLead(lead)}\n\nAssign a crew member and schedule it: ${site.url}/admin/leads/${leadId}`,
   });
 
   // Confirmation to the customer (plain text keeps it personal and avoids spam filters).

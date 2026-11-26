@@ -40,7 +40,7 @@ const trust = [
 ];
 
 const steps = [
-  { icon: CalendarCheck, title: "Book or send the job", body: "Pick a time online, call, or send a work order. Photos help us price it faster." },
+  { icon: CalendarCheck, title: "Book or send the job", body: "Pick a date online, call, or send a work order. Photos help us price it faster." },
   { icon: FileText, title: "Get a clear price", body: "A written quote or a flat price — and a date. Nothing starts without your OK." },
   { icon: ClipboardList, title: "We do the work", body: "On the day we said. If something changes on site, we call before we carry on." },
   { icon: Camera, title: "Photos & invoice", body: "Before-and-after photos and one itemized invoice, the same day." },

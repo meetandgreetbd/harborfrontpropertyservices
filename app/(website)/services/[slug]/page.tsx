@@ -3,9 +3,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Check, Clock } from "lucide-react";
-import type { BookableService } from "@/lib/booking";
-import { BookOrQuote } from "@/components/booking/BookOrQuote";
-import { QuickBook } from "@/components/booking/QuickBook";
 import { getServiceBySlug, getServiceSlugs } from "@/lib/data/catalog";
 import { bookingModeLabel, formatPrice, priceTypeLabel } from "@/lib/catalog";
 import { site } from "@/lib/site";
@@ -55,23 +52,6 @@ async function ServiceContent({ params }: { params: Promise<{ slug: string }> })
 
   const cover = service.images.find((i) => i.isCover) ?? service.images[0];
   const gallery = service.images.filter((i) => i !== cover);
-
-  // Services that take online bookings get the live date/time picker in the sidebar.
-  const bookable: BookableService | null =
-    service.bookingMode === "QUOTE"
-      ? null
-      : {
-          id: service.id,
-          slug: service.slug,
-          name: service.name,
-          icon: service.icon,
-          shortDescription: service.shortDescription,
-          bookingMode: service.bookingMode as BookableService["bookingMode"],
-          priceType: service.priceType,
-          basePrice: service.basePrice,
-          durationMin: service.durationMin,
-          options: service.options.map((o) => ({ id: o.id, name: o.name, description: o.description, price: o.price, durationMin: o.durationMin })),
-        };
 
   return (
     <>
@@ -202,23 +182,17 @@ async function ServiceContent({ params }: { params: Promise<{ slug: string }> })
           <aside className="md:col-span-5" aria-labelledby="quote-heading">
             <div className="card p-6 sm:p-8 md:sticky md:top-28">
               <h2 id="quote-heading" className="h-card text-night">
-                {bookable ? `Book ${service.name.toLowerCase()}` : `Get a price for ${service.name.toLowerCase()}`}
+                Get a price for {service.name.toLowerCase()}
               </h2>
               <p className="mt-2 text-[0.95rem] text-muted">
-                {bookable ? "Pick a free time below, or ask for a quote. " : ""}Prefer to talk? Call{" "}
+                Tell us about the job and the date you&apos;d like. Prefer to talk? Call{" "}
                 <a href={site.phoneHref} className="tabular font-semibold text-night underline">
                   {site.phone}
                 </a>
               </p>
               <div className="mt-6">
-                {bookable ? (
-                  <BookOrQuote
-                    booking={<QuickBook service={bookable} timeZone={Intl.DateTimeFormat().resolvedOptions().timeZone} />}
-                    quote={<QuoteForm defaultService={service.name} compact />}
-                  />
-                ) : (
-                  <QuoteForm defaultService={service.name} compact />
-                )}
+                {/* Every service page: one quote form with a preferred date (no availability calendar). */}
+                <QuoteForm defaultService={service.name} compact withDate />
               </div>
             </div>
           </aside>

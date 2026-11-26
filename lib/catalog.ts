@@ -2,8 +2,8 @@
 import type { BookingMode, PriceType } from "@/lib/generated/prisma/enums";
 
 export const bookingModes: { value: BookingMode; label: string; help: string }[] = [
-  { value: "INSTANT", label: "Instant booking", help: "Customer picks a time slot and it's confirmed immediately." },
-  { value: "REQUEST", label: "Request a time", help: "Customer picks a time slot; you confirm or reject it." },
+  { value: "INSTANT", label: "Instant booking", help: "Customer picks a date and it's confirmed immediately; you arrange the arrival time." },
+  { value: "REQUEST", label: "Request a time", help: "Customer picks a date; you confirm it and arrange the arrival time." },
   { value: "APPOINTMENT", label: "Assessment visit", help: "Customer books a visit so you can look and quote." },
   { value: "QUOTE", label: "Quote only", help: "No calendar. Customer sends a quote request." },
 ];

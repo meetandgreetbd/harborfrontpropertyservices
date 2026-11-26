@@ -20,7 +20,20 @@ export const estimateSchema = z.object({
   kind: z.literal("estimate"),
   ...base,
   propertyType: z.string().trim().max(60).optional().default(""),
+  // Service pages: preferred visit date only (no time). Empty = no preference.
+  preferredDate: z
+    .string()
+    .trim()
+    .optional()
+    .default("")
+    .refine((s) => s === "" || /^\d{4}-\d{2}-\d{2}$/.test(s), "Choose a valid date")
+    .refine((s) => s === "" || s >= localYmd(new Date(Date.now() - 86_400_000)), "Choose today or a later date"),
 });
+
+/** YYYY-MM-DD for a Date (server local calendar). Yesterday is allowed above to tolerate time-zone differences. */
+function localYmd(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 export const workOrderSchema = z.object({
   kind: z.literal("work-order"),

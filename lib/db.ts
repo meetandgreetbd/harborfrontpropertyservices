@@ -16,7 +16,8 @@ function createClient() {
   const url = new URL(raw);
   const adapter = new PrismaMariaDb({
     // Shared hosts often resolve "localhost" to IPv6 (::1) while MySQL only listens on IPv4.
-    host: url.hostname === "localhost" ? "127.0.0.1" : url.hostname,
+    // "host" is the placeholder from the URL format above, left in by mistake: treat it as local too.
+    host: url.hostname === "localhost" || url.hostname === "host" ? "127.0.0.1" : url.hostname,
     port: Number(url.port || 3306),
     user: decodeURIComponent(url.username),
     password: decodeURIComponent(url.password),

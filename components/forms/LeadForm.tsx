@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import clsx from "clsx";
-import { CheckCircle2, Loader2, Send, ShieldCheck } from "lucide-react";
+import { Loader2, Send, ShieldCheck } from "lucide-react";
+import { toast } from "@/components/ui/Toaster";
 import { submitLead } from "@/app/actions/leads";
 import type { LeadFormState } from "@/lib/validations/lead";
 
@@ -24,26 +25,20 @@ export function LeadForm({
   serviceNames: string[];
 }) {
   const [state, action, pending] = useActionState(submitLead, initial);
+  const formRef = useRef<HTMLFormElement>(null);
   const v = state.values ?? {};
   const err = (name: string) => state.fieldErrors?.[name]?.[0];
 
-  if (state.status === "success") {
-    return (
-      <div
-        role="status"
-        // bring the confirmation into view (it can sit under the sticky header after submitting a long form)
-        ref={(el) => el?.scrollIntoView({ block: "center", behavior: "smooth" })}
-        className="border border-brand/60 bg-white p-8"
-      >
-        <CheckCircle2 className="text-brand-700" size={28} strokeWidth={1.5} aria-hidden="true" />
-        <p className="mt-4 font-display text-2xl text-night">Request received.</p>
-        <p className="mt-3 max-w-prose text-muted">{state.message}</p>
-      </div>
-    );
-  }
+  // Each submission returns a new state object, so this fires once per successful send.
+  // The form stays on the page (cleared) and the confirmation shows as a toast.
+  useEffect(() => {
+    if (state.status !== "success") return;
+    toast.success(kind === "work-order" ? "Work order submitted" : "Request received", state.message);
+    formRef.current?.reset();
+  }, [state, kind]);
 
   return (
-    <form action={action} noValidate className="space-y-5">
+    <form ref={formRef} action={action} noValidate className="space-y-5">
       <input type="hidden" name="kind" value={kind} />
       {/* Honeypot — hidden from people and screen readers */}
       <div aria-hidden="true" className="absolute left-[-9999px]">

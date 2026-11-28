@@ -3,6 +3,7 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { site } from "@/lib/site";
+import { Toaster } from "@/components/ui/Toaster";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </Script>
         )}
         {children}
+        <Toaster />
       </body>
     </html>
   );

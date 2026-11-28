@@ -4,6 +4,11 @@
 const nextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  experimental: {
+    // The build host reports 40+ cores; that many prerender workers each opening database
+    // connections exceeds shared hosting's per-user MySQL connection limit.
+    cpus: 4,
+  },
 };
 
 export default nextConfig;

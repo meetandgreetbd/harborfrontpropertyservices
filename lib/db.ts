@@ -8,17 +8,23 @@ import { PrismaMariaDb } from "@prisma/adapter-mariadb";
  */
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
+const BUILDING = process.env.NEXT_PHASE === "phase-production-build";
+
 function createClient() {
   const raw = process.env.DATABASE_URL;
   if (!raw) throw new Error("DATABASE_URL is not set (see .env.example)");
   const url = new URL(raw);
   const adapter = new PrismaMariaDb({
-    host: url.hostname,
+    // Shared hosts often resolve "localhost" to IPv6 (::1) while MySQL only listens on IPv4.
+    host: url.hostname === "localhost" ? "127.0.0.1" : url.hostname,
     port: Number(url.port || 3306),
     user: decodeURIComponent(url.username),
     password: decodeURIComponent(url.password),
     database: url.pathname.replace(/^\//, ""),
-    connectionLimit: 5,
+    // Shared hosting caps connections per MySQL user, and `next build` runs several workers
+    // that each create their own pool, so keep each pool small.
+    connectionLimit: BUILDING ? 1 : 5,
+    acquireTimeout: 30_000,
     // MySQL 8 default auth (caching_sha2_password) over a non-TLS local connection
     allowPublicKeyRetrieval: true,
   });
